@@ -227,13 +227,12 @@ impl<V: Debug> Debug for RepoPathTree<V> {
 
 #[cfg(test)]
 mod tests {
-    use std::panic;
-
-    use assert_matches::assert_matches;
-    use itertools::Itertools as _;
 
     use super::*;
-    use crate::tests::new_temp_dir;
+
+    fn repo_path(value: &str) -> &RepoPath {
+        RepoPath::from_internal_string(value).unwrap()
+    }
 
     #[test]
     fn test_format_copied_path() {
