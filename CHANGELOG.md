@@ -25,6 +25,10 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   aliases that are simply repeated. For example, with the alias `jj = []`, the
   command `jj jj jj log` will resolve to `jj log` as expected.
 
+* Aliases are now expanded before the default command, in addition to after it.
+  That means the alias `jj = []` can resolve `jj jj` to the default command as
+  expected. Also, aliases can produce arguments for the default command.
+
 ## [0.43.0] - 2026-07-01
 
 ### Release highlights
