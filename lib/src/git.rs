@@ -898,9 +898,11 @@ fn diff_refs_to_import(
         .git_refs()
         .iter()
         .filter_map(|(full_name, target)| {
-            // TODO: or clean up invalid ref in case it was stored due to historical bug?
-            let (kind, symbol) =
-                parse_git_ref(full_name).expect("stored git ref should be parsable");
+            // Skip refs that don't parse as bookmarks or tags: refs outside
+            // the known namespaces may be stored in the view by external
+            // tools building on jj-lib (or by a historical bug); they aren't
+            // imported, so they don't participate in the diff.
+            let (kind, symbol) = parse_git_ref(full_name)?;
             git_ref_filter(kind, symbol).then_some((full_name.as_ref(), target))
         })
         .collect();
@@ -1525,10 +1527,11 @@ fn diff_refs_to_export(
     let known_git_refs = view
         .git_refs()
         .iter()
-        .map(|(full_name, target)| {
-            let (kind, symbol) =
-                parse_git_ref(full_name).expect("stored git ref should be parsable");
-            ((kind, symbol), target)
+        .filter_map(|(full_name, target)| {
+            // Skip refs that don't parse as bookmarks or tags — refs outside
+            // the known namespaces aren't exported (see diff_refs_to_import).
+            let (kind, symbol) = parse_git_ref(full_name)?;
+            Some(((kind, symbol), target))
         })
         // There are two situations where remote refs get out of sync:
         // 1. `jj bookmark forget --include-remotes`
