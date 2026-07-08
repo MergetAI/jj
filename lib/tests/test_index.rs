@@ -1273,3 +1273,40 @@ fn test_change_id_index() {
     );
     assert_eq!(resolve_prefix("ba"), PrefixResolution::NoMatch);
 }
+
+#[test]
+fn test_reachability_fn() -> TestResult {
+    let test_repo = TestRepo::init();
+    let repo = &test_repo.repo;
+
+    // o D
+    // | o C
+    // o | B
+    // |/
+    // o A
+    // o root
+    let mut tx = repo.start_transaction();
+    let commit_a = write_random_commit(tx.repo_mut());
+    let commit_b = write_random_commit_with_parents(tx.repo_mut(), &[&commit_a]);
+    let commit_c = write_random_commit_with_parents(tx.repo_mut(), &[&commit_a]);
+    let commit_d = write_random_commit_with_parents(tx.repo_mut(), &[&commit_b]);
+    let repo = tx.commit("test").block_on()?;
+
+    let index = as_readonly_index(&repo);
+    let contains = index.reachability_fn(&mut [commit_d.id()].into_iter());
+    assert_eq!(contains(commit_d.id()), Some(true));
+    assert_eq!(contains(commit_b.id()), Some(true));
+    assert_eq!(contains(commit_a.id()), Some(true));
+    assert_eq!(contains(repo.store().root_commit_id()), Some(true));
+    // C is not an ancestor of D.
+    assert_eq!(contains(commit_c.id()), Some(false));
+    // An id the index has never seen.
+    assert_eq!(contains(&CommitId::from_bytes(&[0xaa; 16])), None);
+
+    // Multiple heads: both branches reachable.
+    let contains = index.reachability_fn(&mut [commit_c.id(), commit_b.id()].into_iter());
+    assert_eq!(contains(commit_c.id()), Some(true));
+    assert_eq!(contains(commit_b.id()), Some(true));
+    assert_eq!(contains(commit_d.id()), Some(false));
+    Ok(())
+}

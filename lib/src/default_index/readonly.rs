@@ -25,12 +25,14 @@ use std::iter;
 use std::ops::Range;
 use std::path::Path;
 use std::sync::Arc;
+use std::sync::Mutex;
 
 use async_trait::async_trait;
 use itertools::Itertools as _;
 use smallvec::smallvec;
 use thiserror::Error;
 
+use super::bit_set::AncestorsBitSet;
 use super::changed_path::CompositeChangedPathIndex;
 use super::composite::AsCompositeIndex;
 use super::composite::ChangeIdIndexImpl;
@@ -766,6 +768,34 @@ impl Index for DefaultReadonlyIndex {
         store: &Arc<Store>,
     ) -> Result<Box<dyn Revset + '_>, RevsetEvaluationError> {
         self.0.evaluate_revset(expression, store)
+    }
+}
+
+impl DefaultReadonlyIndex {
+    /// A lazily-populated reachability predicate: whether a commit id is an
+    /// ancestor of `heads`, or `None` if the commit is not in the index. The
+    /// bit-set-backed sibling of [`Revset::containing_fn`] for the ancestor
+    /// closure: ancestors are visited only as deep as the queried positions,
+    /// so the cost is bounded by the oldest query, not by the repository.
+    ///
+    /// [`Revset::containing_fn`]: crate::revset::Revset::containing_fn
+    pub fn reachability_fn(
+        &self,
+        heads: &mut dyn Iterator<Item = &CommitId>,
+    ) -> Box<dyn Fn(&CommitId) -> Option<bool> + Send + Sync> {
+        let index = self.0.clone();
+        let mut reachable_set = AncestorsBitSet::with_capacity(index.commits().num_commits());
+        for id in heads {
+            reachable_set.add_head(index.commits().commit_id_to_pos(id).unwrap());
+        }
+        let reachable_set = Mutex::new(reachable_set);
+        Box::new(move |commit_id| {
+            let commits = index.commits();
+            let pos = commits.commit_id_to_pos(commit_id)?;
+            let mut reachable_set = reachable_set.lock().unwrap();
+            reachable_set.visit_until(commits, pos);
+            Some(reachable_set.contains(pos))
+        })
     }
 }
 
