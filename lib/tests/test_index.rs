@@ -1310,3 +1310,25 @@ fn test_reachability_fn() -> TestResult {
     assert_eq!(contains(commit_d.id()), Some(false));
     Ok(())
 }
+
+#[test]
+fn test_position_of() -> TestResult {
+    let test_repo = TestRepo::init();
+    let repo = &test_repo.repo;
+
+    let mut tx = repo.start_transaction();
+    let commit_a = write_random_commit(tx.repo_mut());
+    let commit_b = write_random_commit_with_parents(tx.repo_mut(), &[&commit_a]);
+    let repo = tx.commit("test").block_on()?;
+
+    let index = as_readonly_index(&repo);
+    // Positions strictly extend ancestry: root < A < B.
+    let root = index.position_of(repo.store().root_commit_id()).unwrap();
+    let a = index.position_of(commit_a.id()).unwrap();
+    let b = index.position_of(commit_b.id()).unwrap();
+    assert!(root < a);
+    assert!(a < b);
+    // An id the index has never seen.
+    assert_eq!(index.position_of(&CommitId::from_bytes(&[0xaa; 16])), None);
+    Ok(())
+}

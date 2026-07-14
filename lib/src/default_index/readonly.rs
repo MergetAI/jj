@@ -772,6 +772,17 @@ impl Index for DefaultReadonlyIndex {
 }
 
 impl DefaultReadonlyIndex {
+    /// The commit's global index position — a dense `u32` that is a strict
+    /// linear extension of ancestry (a parent's position is smaller than any
+    /// child's), or `None` if the commit is not in the index. The rank
+    /// counterpart of [`Self::reachability_fn`] for callers ordering commits
+    /// without loading them. Positions are stable within one index
+    /// generation only; never persist them outside the index.
+    pub fn position_of(&self, commit_id: &CommitId) -> Option<u32> {
+        let pos = self.0.commits().commit_id_to_pos(commit_id)?;
+        Some(pos.0)
+    }
+
     /// A lazily-populated reachability predicate: whether a commit id is an
     /// ancestor of `heads`, or `None` if the commit is not in the index. The
     /// bit-set-backed sibling of [`Revset::containing_fn`] for the ancestor
