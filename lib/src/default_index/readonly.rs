@@ -783,6 +783,15 @@ impl DefaultReadonlyIndex {
         Some(pos.0)
     }
 
+    /// The commit's parent ids, straight off the commit index — `None` if
+    /// the commit is not in the index. The parent-enumeration counterpart of
+    /// [`Self::position_of`] for callers walking graph structure without
+    /// loading commits.
+    pub fn parents_of(&self, commit_id: &CommitId) -> Option<Vec<CommitId>> {
+        let entry = self.0.commits().entry_by_id(commit_id)?;
+        Some(entry.parents().map(|parent| parent.commit_id()).collect())
+    }
+
     /// A lazily-populated reachability predicate: whether a commit id is an
     /// ancestor of `heads`, or `None` if the commit is not in the index. The
     /// bit-set-backed sibling of [`Revset::containing_fn`] for the ancestor
