@@ -160,6 +160,11 @@ pub enum RevsetCommitRef {
         symbol: RemoteRefSymbolExpression,
         remote_ref_state: Option<RemoteRefState>,
     },
+    /// A commit set resolved by an extension against the repo — the
+    /// set-valued counterpart to a [`SymbolResolverExtension`] (which yields
+    /// a single commit). Lets a custom revset function name commits by an
+    /// index the host defines.
+    Extension(Arc<dyn CommitRefResolver>),
 }
 
 /// String expressions to match `name@remote` bookmarks/tags.
@@ -182,6 +187,15 @@ impl dyn RevsetFilterExtension {
     pub fn downcast_ref<T: RevsetFilterExtension>(&self) -> Option<&T> {
         (self as &dyn Any).downcast_ref()
     }
+}
+
+/// A commit set resolved by an extension against the repo — the resolve-time,
+/// repo-aware, set-valued counterpart to a symbol. A custom revset function
+/// builds a [`RevsetCommitRef::Extension`] holding one of these; resolution
+/// calls [`resolve`](Self::resolve) with the repo in hand.
+pub trait CommitRefResolver: std::fmt::Debug + Send + Sync {
+    /// The commits this ref names in `repo`.
+    fn resolve(&self, repo: &dyn Repo) -> Result<Vec<CommitId>, RevsetResolutionError>;
 }
 
 #[derive(Eq, Copy, Clone, Debug, PartialEq)]
@@ -418,6 +432,12 @@ impl<St: ExpressionState<CommitRef = RevsetCommitRef>> RevsetExpression<St> {
 
     pub fn symbol(value: String) -> Arc<Self> {
         Arc::new(Self::CommitRef(RevsetCommitRef::Symbol(value)))
+    }
+
+    /// A commit set resolved by `resolver` against the repo — for custom
+    /// functions naming commits by a host-defined index.
+    pub fn commit_ref_extension(resolver: Arc<dyn CommitRefResolver>) -> Arc<Self> {
+        Arc::new(Self::CommitRef(RevsetCommitRef::Extension(resolver)))
     }
 
     pub fn remote_symbol(value: RemoteRefSymbolBuf) -> Arc<Self> {
@@ -3006,6 +3026,7 @@ fn resolve_commit_ref(
                 .collect();
             Ok(commit_ids)
         }
+        RevsetCommitRef::Extension(resolver) => resolver.resolve(repo),
     }
 }
 
