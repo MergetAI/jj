@@ -792,6 +792,16 @@ impl DefaultReadonlyIndex {
         Some(entry.parents().map(|parent| parent.commit_id()).collect())
     }
 
+    /// The commit's generation number — its longest-path distance from the
+    /// root, straight off the commit index — or `None` if the commit is not
+    /// in the index. The depth counterpart of [`Self::position_of`]: every
+    /// ancestor of a commit has a strictly smaller generation, so a
+    /// generation floor bounds ancestor walks.
+    pub fn generation_of(&self, commit_id: &CommitId) -> Option<u32> {
+        let entry = self.0.commits().entry_by_id(commit_id)?;
+        Some(entry.generation_number())
+    }
+
     /// A lazily-populated reachability predicate: whether a commit id is an
     /// ancestor of `heads`, or `None` if the commit is not in the index. The
     /// bit-set-backed sibling of [`Revset::containing_fn`] for the ancestor
