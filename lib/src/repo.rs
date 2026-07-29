@@ -1150,7 +1150,7 @@ impl MutableRepo {
         self.rewritten_ids_with(old_ids, |rewrite| !matches!(rewrite, Rewrite::Divergent(_)))
     }
 
-    fn normalize_heads(&mut self) -> IndexResult<()> {
+    pub fn normalize_heads(&mut self) -> IndexResult<()> {
         self.view.normalize_heads(
             self.index.as_index(),
             self.base_repo.store().root_commit_id(),
