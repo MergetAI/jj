@@ -1632,7 +1632,9 @@ fn find_git_tag_oid_to_copy(
         .find_map(|git_ref| git_ref.inner.target.try_into_id().ok())
 }
 
-fn delete_git_ref(
+/// Deletes `git_ref_name` if it still points to `old_oid`. A ref git
+/// already deleted counts as success; a ref git moved elsewhere fails.
+pub fn delete_git_ref(
     git_repo: &gix::Repository,
     git_ref_name: &GitRefName,
     old_oid: &gix::oid,
@@ -1727,7 +1729,10 @@ fn move_git_ref(
     }
 }
 
-fn update_git_ref(
+/// Points `git_ref_name` at `new_ref_oid` or (peeled) `new_commit_oid`,
+/// guarded on `old_commit_oid` (`None` = the ref must not exist). A ref git
+/// already pointed at the desired target counts as success.
+pub fn update_git_ref(
     git_repo: &gix::Repository,
     git_ref_name: &GitRefName,
     old_commit_oid: Option<gix::ObjectId>,
