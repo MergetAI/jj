@@ -4978,6 +4978,7 @@ fn test_push_bookmarks_success() -> TestResult {
         subprocess_options,
         "origin".as_ref(),
         &targets,
+        &[],
         &mut NullCallback,
         &GitPushOptions::default(),
     )?;
@@ -5054,6 +5055,7 @@ fn test_push_bookmarks_deletion() -> TestResult {
         subprocess_options,
         "origin".as_ref(),
         &targets,
+        &[],
         &mut NullCallback,
         &GitPushOptions::default(),
     )?;
@@ -5128,6 +5130,7 @@ fn test_push_bookmarks_mixed_deletion_and_addition() -> TestResult {
         subprocess_options,
         "origin".as_ref(),
         &targets,
+        &[],
         &mut NullCallback,
         &GitPushOptions::default(),
     )?;
@@ -5211,6 +5214,7 @@ fn test_push_bookmarks_not_fast_forward() -> TestResult {
         subprocess_options,
         "origin".as_ref(),
         &targets,
+        &[],
         &mut NullCallback,
         &GitPushOptions::default(),
     )?;
@@ -5266,6 +5270,7 @@ fn test_push_bookmarks_partial_success() -> TestResult {
         subprocess_options,
         "origin".as_ref(),
         &targets,
+        &[],
         &mut NullCallback,
         &GitPushOptions::default(),
     )?;
@@ -5368,6 +5373,7 @@ fn test_push_bookmarks_unmapped_refs() -> TestResult {
         subprocess_options,
         "origin".as_ref(),
         &targets,
+        &[],
         &mut NullCallback,
         &GitPushOptions::default(),
     )?;
@@ -5463,6 +5469,7 @@ fn test_push_new_tags() -> TestResult {
         subprocess_options,
         "origin".as_ref(),
         &targets,
+        &[],
         &mut NullCallback,
         &GitPushOptions::default(),
     )?;
@@ -5555,6 +5562,7 @@ fn test_push_deleted_tags() -> TestResult {
         subprocess_options,
         "origin".as_ref(),
         &targets,
+        &[],
         &mut NullCallback,
         &GitPushOptions::default(),
     )?;
@@ -5622,6 +5630,7 @@ fn test_push_moved_tags_without_fetching() -> TestResult {
         subprocess_options.clone(),
         "origin".as_ref(),
         &targets,
+        &[],
         &mut NullCallback,
         &GitPushOptions::default(),
     )?;
@@ -5652,6 +5661,7 @@ fn test_push_moved_tags_without_fetching() -> TestResult {
         subprocess_options.clone(),
         "origin".as_ref(),
         &targets,
+        &[],
         &mut NullCallback,
         &GitPushOptions::default(),
     )?;
@@ -5723,6 +5733,7 @@ fn test_push_deleted_tags_without_fetching() -> TestResult {
         subprocess_options.clone(),
         "origin".as_ref(),
         &targets,
+        &[],
         &mut NullCallback,
         &GitPushOptions::default(),
     )?;
@@ -5750,6 +5761,7 @@ fn test_push_deleted_tags_without_fetching() -> TestResult {
         subprocess_options.clone(),
         "origin".as_ref(),
         &targets,
+        &[],
         &mut NullCallback,
         &GitPushOptions::default(),
     )?;
@@ -6111,6 +6123,7 @@ fn test_push_environment_options() -> TestResult {
         subprocess_options,
         "origin".as_ref(),
         &targets,
+        &[],
         &mut NullCallback,
         &GitPushOptions::default(),
     )?;

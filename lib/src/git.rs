@@ -3211,6 +3211,7 @@ pub struct GitPushRefTargets {
     pub tags: Vec<(RefNameBuf, Diff<Option<CommitId>>)>,
 }
 
+#[derive(Clone, Debug)]
 pub struct GitRefUpdate {
     pub qualified_name: GitRefNameBuf,
     /// Expected position on the remote and new position to push.
@@ -3228,11 +3229,16 @@ pub struct GitPushOptions {
 }
 
 /// Pushes the specified refs and updates the repo view accordingly.
+///
+/// `extra_updates` ride the same `git push` invocation but receive none of the
+/// bookmark/tag bookkeeping; their per-ref outcomes are reported through the
+/// returned stats only.
 pub fn push_refs(
     mut_repo: &mut MutableRepo,
     subprocess_options: GitSubprocessOptions,
     remote: &RemoteName,
     targets: &GitPushRefTargets,
+    extra_updates: &[GitRefUpdate],
     callback: &mut dyn GitSubprocessCallback,
     options: &GitPushOptions,
 ) -> Result<GitPushStats, GitPushError> {
@@ -3266,6 +3272,7 @@ pub fn push_refs(
             },
         }),
     )
+    .chain(extra_updates.iter().cloned())
     .collect_vec();
 
     let push_stats = push_updates(

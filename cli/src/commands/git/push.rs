@@ -575,6 +575,7 @@ pub async fn cmd_git_push(
         git_settings.to_subprocess_options(),
         remote,
         &ref_updates,
+        &[],
         &mut GitSubprocessUi::new(ui),
         &options,
     )?;
